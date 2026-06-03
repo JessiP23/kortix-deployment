@@ -13,7 +13,10 @@ This repository contains the deployment configuration for Kortix/Suna on Azure C
 
 ### Prerequisites
 
+- **Node.js 22.x** (required by suna project)
+- pnpm package manager
 - Docker and Docker Compose installed
+- Azure CLI installed and logged in
 - Supabase project (or local PostgreSQL)
 - OpenRouter API key (or Groq API key for free tier)
 - Daytona API key (for sandbox execution)
@@ -128,6 +131,18 @@ ENVIRONMENT_NAME="kortix-env"
 ```
 
 ## Troubleshooting
+
+### Node.js version error
+
+If you get "Unsupported environment (bad pnpm and/or Node.js version)", you need Node.js 22.x:
+
+```bash
+# Using nvm (recommended)
+nvm install 22
+nvm use 22
+
+# Or download from https://nodejs.org
+```
 
 ### Services won't start
 
