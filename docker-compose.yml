@@ -1,0 +1,122 @@
+services:
+  # Redis for caching and session management
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    restart: unless-stopped
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # PostgreSQL (if not using Supabase cloud)
+  postgres:
+    image: postgres:15-alpine
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-kortix}
+      POSTGRES_USER: ${POSTGRES_USER:-kortix}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-kortix_password}
+    restart: unless-stopped
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-kortix}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Kortix API
+  kortix-api:
+    build:
+      context: ../suna
+      dockerfile: apps/api/Dockerfile
+      args:
+        SERVICE: apps/api
+        KORTIX_VERSION: ${KORTIX_VERSION:-0.9.5}
+    working_dir: /app
+    ports:
+      - "8008:8008"
+    environment:
+      # Database
+      DATABASE_URL: ${DATABASE_URL}
+      SUPABASE_URL: ${SUPABASE_URL}
+      SUPABASE_ANON_KEY: ${SUPABASE_ANON_KEY}
+      SUPABASE_SERVICE_ROLE_KEY: ${SUPABASE_SERVICE_ROLE_KEY}
+      
+      # Redis
+      REDIS_URL: redis://redis:6379
+      
+      # LLM Provider (OpenRouter)
+      OPENROUTER_API_KEY: ${OPENROUTER_API_KEY}
+      OPENROUTER_BASE_URL: ${OPENROUTER_BASE_URL:-https://openrouter.ai/api/v1}
+      
+      # Daytona (for sandboxes)
+      DAYTONA_API_KEY: ${DAYTONA_API_KEY}
+      DAYTONA_SERVER_URL: ${DAYTONA_SERVER_URL}
+      
+      # App Configuration
+      KORTIX_URL: ${KORTIX_URL:-http://localhost:8008}
+      ENV_MODE: ${ENV_MODE:-production}
+      KORTIX_LOCAL_DEV: ${KORTIX_LOCAL_DEV:-0}
+      ALLOWED_SANDBOX_PROVIDERS: ${ALLOWED_SANDBOX_PROVIDERS:-daytona}
+      
+      # Features
+      BILLING_ENABLED: ${BILLING_ENABLED:-false}
+      
+      # Secrets
+      JWT_SECRET: ${JWT_SECRET}
+      
+      # Optional: Groq for free tier
+      GROQ_API_KEY: ${GROQ_API_KEY:-}
+      DIRECTOR_MODEL_PROVIDER: ${DIRECTOR_MODEL_PROVIDER:-openrouter}
+      
+      # Optional: Composio integration
+      COMPOSIO_API_KEY: ${COMPOSIO_API_KEY:-}
+      COMPOSIO_ENV: ${COMPOSIO_ENV:-production}
+    depends_on:
+      redis:
+        condition: service_healthy
+      postgres:
+        condition: service_healthy
+    restart: unless-stopped
+    networks:
+      - kortix-network
+
+  # Kortix Frontend
+  kortix-frontend:
+    build:
+      context: ../suna
+      dockerfile: apps/web/Dockerfile
+      args:
+        NEXT_PUBLIC_SUPABASE_URL: ${SUPABASE_URL}
+        NEXT_PUBLIC_SUPABASE_ANON_KEY: ${SUPABASE_ANON_KEY}
+        NEXT_PUBLIC_BACKEND_URL: ${NEXT_PUBLIC_BACKEND_URL:-http://localhost:8008/v1}
+        NEXT_PUBLIC_BILLING_ENABLED: ${BILLING_ENABLED:-false}
+    working_dir: /app
+    ports:
+      - "3000:3000"
+    environment:
+      NEXT_PUBLIC_SUPABASE_URL: ${SUPABASE_URL}
+      NEXT_PUBLIC_SUPABASE_ANON_KEY: ${SUPABASE_ANON_KEY}
+      NEXT_PUBLIC_BACKEND_URL: ${NEXT_PUBLIC_BACKEND_URL:-http://localhost:8008/v1}
+    depends_on:
+      - kortix-api
+    restart: unless-stopped
+    networks:
+      - kortix-network
+
+volumes:
+  redis_data:
+    driver: local
+  postgres_data:
+    driver: local
+
+networks:
+  kortix-network:
+    driver: bridge
