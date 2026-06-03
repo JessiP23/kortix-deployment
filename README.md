@@ -9,8 +9,6 @@ This repository contains the deployment configuration for Kortix/Suna on Azure C
 
 **For Azure deployment:** Use `deploy-azure.sh` which builds from the `suna/` directory and deploys to Azure Container Apps.
 
-**For local deployment:** Use `deploy-kortix.sh` which runs Docker Compose locally.
-
 ## Quick Start
 
 ### Prerequisites
@@ -38,7 +36,7 @@ This repository contains the deployment configuration for Kortix/Suna on Azure C
 
 3. **Deploy**:
    ```bash
-   ./deploy-kortix.sh deploy
+   ./deploy-azure.sh 0.9.5
    ```
 
 ## Configuration
@@ -81,45 +79,19 @@ BILLING_ENABLED=false
 
 ## Services
 
-The deployment includes:
+The Azure deployment includes:
 
-- **kortix-api**: Kortix backend API (port 8008)
-- **kortix-frontend**: Kortix web frontend (port 3000)
-- **redis**: Redis for caching and session management (port 6379)
-- **postgres**: PostgreSQL database (port 5432, optional if using Supabase cloud)
-
-## Deployment Script Usage
-
-```bash
-# Deploy (build and start)
-./deploy-kortix.sh deploy
-
-# Start services
-./deploy-kortix.sh start
-
-# Stop services
-./deploy-kortix.sh stop
-
-# Restart services
-./deploy-kortix.sh restart
-
-# View logs
-./deploy-kortix.sh logs
-
-# Check health
-./deploy-kortix.sh health
-
-# Deploy to Azure (not yet implemented)
-./deploy-kortix.sh azure
-```
+- **kortix-api**: Kortix backend API
+- **kortix-frontend**: Kortix web frontend
+- **Azure Cache for Redis**: Redis for caching and session management
 
 ## Access Points
 
-After deployment:
+After Azure deployment:
 
-- **Frontend**: http://localhost:3000
-- **API**: http://localhost:8008
-- **API Health**: http://localhost:8008/v1/health
+- **Frontend**: https://kortix-frontend.azurewebsites.net
+- **API**: https://kortix-api.azurewebsites.net
+- **API Health**: https://kortix-api.azurewebsites.net/v1/health
 
 ## Azure Container Apps Deployment
 
