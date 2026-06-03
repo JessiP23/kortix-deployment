@@ -2,6 +2,15 @@
 
 This repository contains the deployment configuration for Kortix/Suna on Azure Container Apps using Docker Compose.
 
+## What to Deploy
+
+- **suna/** - The Kortix source code (cloned from GitHub). This is what you build and deploy.
+- **kortix-deployment/** - Deployment configuration (docker-compose.yml, scripts, .env). This is your deployment setup.
+
+**For Azure deployment:** Use `deploy-azure.sh` which builds from the `suna/` directory and deploys to Azure Container Apps.
+
+**For local deployment:** Use `deploy-kortix.sh` which runs Docker Compose locally.
+
 ## Quick Start
 
 ### Prerequisites
@@ -114,12 +123,37 @@ After deployment:
 
 ## Azure Container Apps Deployment
 
-Currently, this setup uses Docker Compose for local deployment. Azure Container Apps deployment will be added in a future update.
+Deploy to Azure Container Apps using the provided script (similar to wmstudio approach):
 
-For now, you can:
-1. Deploy locally using Docker Compose
-2. Use the Azure Container Apps Docker Compose integration (requires Azure CLI)
-3. Manually convert the docker-compose.yml to Azure Container Apps YAML
+```bash
+cd /Users/jessipavia/wm/kortix-deployment
+./deploy-azure.sh 0.9.5
+```
+
+**Prerequisites:**
+- Azure CLI installed and logged in (`az login`)
+- .env file configured with your API keys
+
+The script will:
+1. Build Docker images from the suna source code
+2. Push images to Azure Container Registry (ACR)
+3. Create Azure Container Apps environment
+4. Deploy API and Frontend to Azure Container Apps
+5. Set up Azure Cache for Redis
+
+**Required Azure resources** (auto-created by script):
+- Resource Group: `kortix-rg`
+- Azure Container Registry: `kortixacr`
+- Container Apps Environment: `kortix-env`
+- Azure Cache for Redis: `kortix-redis`
+
+**Customize Azure settings** in `deploy-azure.sh`:
+```bash
+RESOURCE_GROUP="kortix-rg"
+LOCATION="eastus"
+ACR_NAME="kortixacr"
+ENVIRONMENT_NAME="kortix-env"
+```
 
 ## Troubleshooting
 
