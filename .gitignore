@@ -14,3 +14,6 @@ npm-debug.log*
 # Temporary files
 *.tmp
 *.tempdeploy-azure.sh
+
+deploy-azure.sh
+./deploy-azure.sh
